@@ -11,8 +11,11 @@ __pycache__/
 token.json
 client_secrets.json
 service_account.json
+client_secrets_desktop.json
 
 # IDE/Editor spezifische Dateien
 .vscode/
 .idea/
 *.DS_Store
+
+.streamlit/

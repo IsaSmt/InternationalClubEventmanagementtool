@@ -1,4 +1,4 @@
-# main.py
+# main.py (Finale, aufgeräumte Version)
 
 import streamlit as st
 import os 
@@ -6,124 +6,77 @@ import pandas as pd
 from dotenv import load_dotenv
 import time
 from PIL import Image
-from modules.auth import authenticate_google
 
-# --- HILFSFUNKTION ZUM LADEN VON CSS ---
-def local_css(file_name):
-    """Liest eine lokale CSS-Datei und injiziert sie in die Streamlit-App."""
-    try:
-        with open(file_name) as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    except FileNotFoundError:
-        st.warning(f"Warnung: CSS-Datei '{file_name}' nicht gefunden. Das Design wird nicht angewendet.")
-
-# --- SEITENKONFIGURATION ---
-st.set_page_config(
-    page_title="International Club - Eventtool", 
-    page_icon="🎓", 
-    layout="wide"
-)
-
-# --- LADE GLOBALES STYLING ---
-local_css("style.css")
-
-# --- Lade Umgebungsvariablen und Module ---
-load_dotenv() 
-
+# --- MODULE IMPORTIEREN ---
+from modules.auth import authenticate_google, get_credentials
 from modules.signature_capture import capture_signature 
 from modules.pdf_generator import generate_participant_pdf 
-from modules.sheet_loader import load_participants_from_csv, process_dataframe_for_display 
+from modules.sheet_loader import process_dataframe_for_display 
 from modules.qr_generator import generate_custom_qr_code_base64
 from modules.google_sheets_reader import load_participants_from_google_sheet, extract_sheet_id
 from modules.form_creator import create_form_final_version_with_drive_title
 from modules.submission_handler import create_submission_zip, upload_zip_to_drive, send_email_notification 
 from modules.report_ai_generator import generate_experience_report_docx 
 
+# --- HILFSFUNKTIONEN UND KONFIGURATION ---
+def local_css(file_name):
+    try:
+        with open(file_name) as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.warning(f"Warnung: CSS-Datei '{file_name}' nicht gefunden.")
 
-# --- URL-Parameter auslesen ---
-query_params = st.query_params 
-page_param = query_params.get("page") 
-if page_param is None: page_param = ""
-sheet_id_param = query_params.get("sheet_id") 
+st.set_page_config(page_title="International Club - Eventtool", page_icon="🎓", layout="wide")
+local_css("style.css")
+load_dotenv()
 
-# --- Spezialbehandlung für Kiosk-Modus ---
-if page_param == "sign":
-    st.markdown("""
-        <style>
-            /* Blende Sidebar und Hauptmenü im Kiosk-Modus aus */
-            div[data-testid="stSidebarNav"] { display: none; }
-            div[data-testid="stSidebar"] { display: none; }
-            
-            /* Zentriere den Inhalt im Kiosk-Modus noch stärker */
-            .main .block-container { 
-                max-width: 700px !important; 
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
-# --- Restliche Initialisierungen und Debug-Ausgaben ---
-print(f"DEBUG (main.py - TOP): Roh-Query-Parameter-Objekt: {query_params}") 
-print(f"DEBUG (main.py - TOP): Verarbeitete URL-Parameter: page_param='{page_param}', sheet_id_param='{sheet_id_param}'")
-
-BASE_URL = os.getenv("STREAMLIT_SERVER_BASE_URL", "http://10.137.31.126:8501")
-print(f"DEBUG (main.py): Verwendete BASE_URL: {BASE_URL}")
-
-# Session State Initialisierungen
+# main.py
+BASE_URL = os.getenv("STREAMLIT_SERVER_BASE_URL", "http://localhost:8501")
 if 'participants_df' not in st.session_state: st.session_state.participants_df = pd.DataFrame() 
-if 'participants_df_for_sign' not in st.session_state: st.session_state.participants_df_for_sign = pd.DataFrame()
-if 'current_loaded_sheet_id_for_sign' not in st.session_state: st.session_state.current_loaded_sheet_id_for_sign = None
-if 'generated_report_for_submission' not in st.session_state: st.session_state.generated_report_for_submission = None
-if 'generated_zip_path' not in st.session_state: st.session_state.generated_zip_path = None
-if "pdf_event_name_val" not in st.session_state: st.session_state.pdf_event_name_val = ""
-if "pdf_event_date_val" not in st.session_state: st.session_state.pdf_event_date_val = ""
-if "pdf_tutors_val" not in st.session_state: st.session_state.pdf_tutors_val = ""
-if "pdf_price_val" not in st.session_state: st.session_state.pdf_price_val = ""
 
+# --- URL-ROUTING FÜR KIOSK-MODUS ---
+query_params = st.query_params 
+page_param = query_params.get("page")
 
-# --- Logik für das Laden der Daten beim Aufruf über QR-Code / ?page=sign ---
 if page_param == "sign":
+    sheet_id_param = query_params.get("sheet_id")
+    st.markdown("""<style> div[data-testid="stSidebar"] { display: none; } </style>""", unsafe_allow_html=True)
     st.image(os.path.join("data", "I-CLUB_LOGO.png"), width=100) 
     st.title("Digitale Unterschrift")
-    st.markdown("---")
-    
     if sheet_id_param:
-        if st.session_state.current_loaded_sheet_id_for_sign != sheet_id_param or st.session_state.participants_df_for_sign.empty:
-            st.session_state.current_loaded_sheet_id_for_sign = sheet_id_param
-            print(f"DEBUG (main.py - Sign Page): Lade Daten für sheet_id '{sheet_id_param}'.")
-            sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id_param}/edit"
-            with st.spinner("Lade Teilnehmerdaten von Google Sheets..."):
-                temp_df_google = load_participants_from_google_sheet(sheet_url) 
-            
-            if not temp_df_google.empty:
-                with st.spinner("Verarbeite Teilnehmerdaten..."):
-                    st.session_state.participants_df_for_sign = process_dataframe_for_display(temp_df_google)
-                if not st.session_state.participants_df_for_sign.empty:
-                    st.success("Teilnehmerliste geladen!")
-                    time.sleep(1.5) 
-                    st.rerun() 
-                else: 
-                    st.warning("Teilnehmerdaten konnten nicht aufbereitet werden.")
-                    st.stop()
-            else: 
-                st.error(f"Fehler: Konnte keine Daten von Google Sheet ID '{sheet_id_param}' laden oder das Sheet ist leer.")
-                st.stop() 
-        
-        if not st.session_state.participants_df_for_sign.empty:
-            capture_signature(st.session_state.participants_df_for_sign)
-        else:
-            st.info("Warte auf Teilnehmerdaten...") 
+        sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id_param}/edit"
+        with st.spinner("Lade Teilnehmerdaten..."):
+            try:
+                # Dieser Aufruf MUSS OHNE Credentials funktionieren, d.h. das Sheet muss öffentlich lesbar sein.
+                df_raw = load_participants_from_google_sheet(sheet_url, credentials=None)
+                if not df_raw.empty:
+                    df_processed = process_dataframe_for_display(df_raw)
+                    capture_signature(df_processed)
+                else:
+                    st.error("Konnte keine Daten vom Google Sheet laden oder das Sheet ist leer.")
+            except Exception as e:
+                st.error(f"Fehler beim Laden der Teilnehmerliste: {e}")
     else:
-        st.error("Keine Sheet ID in der URL gefunden. Diese Seite bitte über den QR-Code aufrufen.")
-    st.stop() 
+        st.error("Keine Sheet ID in der URL gefunden.")
+    st.stop()
 
-# --- Normaler App-Aufbau ---
-logo_path = os.path.join("data", "I-CLUB_LOGO_Sidebar.png")
-if os.path.exists(logo_path):
-    st.sidebar.image(logo_path, use_container_width=True)
-else:
-    st.sidebar.warning("Logo-Datei 'data/I-CLUB_LOGO.png' nicht gefunden.")
+# --- GLOBALE AUTHENTIFIZIERUNG FÜR DIE HAUPT-APP ---
+creds = authenticate_google()
+if not creds:
+    st.stop() # Hält die App hier an und zeigt die Anmelde-Anleitung aus auth.py
+
+# ==============================================================================
+# --- HAUPTANWENDUNG (Wird nur angezeigt, wenn der Nutzer angemeldet ist) ---
+# ==============================================================================
+
+# --- Sidebar ---
+st.sidebar.image(os.path.join("data", "I-CLUB_LOGO_Sidebar.png"), use_container_width=True)
+st.sidebar.success("✅ Angemeldet")
+if st.sidebar.button("Abmelden"):
+    if 'google_credentials' in st.session_state:
+        del st.session_state['google_credentials']
+    st.query_params.clear()
+    st.rerun()
 
 st.title("International Club - Eventtool")
 st.subheader("Organisiere Events, Teilnehmer und Abrechnungen")
@@ -135,18 +88,16 @@ menu_options = [
     "📄 Teilnehmerliste & PDF Management", 
     "🧾 Abrechnung & Bericht einreichen",
 ]
-default_menu_index = 0 
-menu_selection = st.sidebar.selectbox("Navigation", menu_options, index=default_menu_index, key="main_menu_v11_kiosk")
+menu_selection = st.sidebar.selectbox("Navigation", menu_options)
 
+# --- Seiten-Logik ---
 if menu_selection == "🏠 Start":
-    st.write("Willkommen im Event-Management-Tool für den International Club! 🎓")
+    st.write("Willkommen! Du bist erfolgreich angemeldet.")
     st.info("Bitte wähle links im Menü aus, was du tun möchtest.")
-    st.markdown("---")
-    st.write("Aktuell geladene Teilnehmer (Vorschau aus Haupt-DataFrame):")
     if not st.session_state.participants_df.empty:
+        st.markdown("---")
+        st.write("Aktuell geladene Teilnehmer (Vorschau):")
         st.dataframe(st.session_state.participants_df.head())
-    else:
-        st.write("Noch keine Teilnehmerliste global geladen.")
 
 elif menu_selection == "📝 Einladung erstellen": 
     st.subheader("📝 Google Formular erstellen")
