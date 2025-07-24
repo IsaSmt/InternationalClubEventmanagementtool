@@ -2,6 +2,9 @@
 
 import streamlit as st
 import os 
+# === HIER DIE NEUE ZEILE EINFÜGEN ===
+os.environ["GDU_DEV_DISABLE_COMPUTE_ENGINE_CHECK"] = "True"
+# ==================================
 import pandas as pd 
 from dotenv import load_dotenv
 import time
