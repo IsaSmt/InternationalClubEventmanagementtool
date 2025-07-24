@@ -10,12 +10,13 @@ __pycache__/
 .env
 token.json
 client_secrets.json
+client_secrets_desktop.json # von deinen lokalen Änderungen
 service_account.json
-client_secrets_desktop.json
 
 # IDE/Editor spezifische Dateien
 .vscode/
 .idea/
 *.DS_Store
 
-.streamlit/
+# Streamlit-spezifische lokale Dateien
+.streamlit/ # Die korrekte Version vom Server
