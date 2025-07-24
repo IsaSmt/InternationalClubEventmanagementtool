@@ -6,11 +6,6 @@ venv/
 __pycache__/
 *.pyc
 
-# Generierte Dateien und Logs
-output/
-signatures/
-data/teilnehmer.csv
-
 # Sensible Konfigurations- und Authentifizierungsdateien
 .env
 token.json
