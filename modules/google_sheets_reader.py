@@ -13,7 +13,7 @@ def extract_sheet_id(sheet_url: str) -> str | None:
     match = re.search(r"/spreadsheets/d/([a-zA-Z0-9-_]+)", sheet_url)
     return match.group(1) if match else None
 
-@st.cache_data(ttl=300)
+#@st.cache_data(ttl=300)
 def load_participants_from_google_sheet(sheet_url: str, credentials=None) -> pd.DataFrame:
     """
     Lädt Teilnehmerdaten aus einem Google Sheet.
