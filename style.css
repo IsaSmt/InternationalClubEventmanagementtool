@@ -1,0 +1,135 @@
+/*
+======================================================
+  MODERNES STYLING FÜR DAS INTERNATIONAL CLUB EVENTTOOL
+======================================================
+*/
+
+/* --- 1. Globale Einstellungen & Theme-Farben --- */
+:root {
+    --primary-color: #005a9e;      /* Kräftiges HM-Blau */
+    --primary-color-dark: #004a80;   /* Dunkleres Blau für Hover/Akzente */
+    --background-color: #f0f2f6;     /* Sehr helles, fast weißes Grau für den Haupt-Hintergrund */
+    --secondary-background-color: #ffffff; /* Weiß für Elemente wie Karten, Eingabefelder */
+    --text-color: #262730;           /* Dunkles Grau für Text, nicht reines Schwarz */
+    --light-text-color: #555;        /* Helleres Grau für Untertitel, Captions */
+    --border-radius: 12px;           /* Abgerundete Ecken für alles */
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtiler Schatten für Tiefenwirkung */
+}
+
+body {
+    background-color: var(--background-color);
+}
+
+/* --- 2. Anpassung der Streamlit-Layout-Container --- */
+.main .block-container[data-testid="stVerticalBlock"] {
+    padding: 2rem 5rem;
+    border-radius: var(--border-radius);
+}
+
+/* Sidebar-Styling */
+div[data-testid="stSidebar"] {
+    background-color: var(--secondary-background-color);
+    border-right: 1px solid #e6eaf1;
+}
+
+/* Dies ist der Container für den von dir hinzugefügten Inhalt in der Sidebar */
+div[data-testid="stSidebarUserContent"] {
+    padding-top: 1rem !important;
+}
+
+
+/* --- 3. Styling der Widgets --- */
+div[data-testid="stButton"] > button {
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 12px 28px;
+    font-weight: bold;
+    color: white;
+    background-color: var(--primary-color);
+    transition: all 0.2s ease-in-out;
+    box-shadow: var(--box-shadow);
+}
+div[data-testid="stButton"] > button:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+div[data-testid="stButton"] > button:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 90, 158, 0.5);
+    outline: none;
+}
+div[data-testid="stButton"] > button[kind="primary"] {
+    background-color: #ffc107; 
+    color: var(--text-color);
+    border: none;
+}
+div[data-testid="stButton"] > button[kind="primary"]:hover {
+     background-color: #e0a800;
+}
+div[data-testid="stTextInput"] input,
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    border-radius: var(--border-radius) !important;
+    border: 1px solid #e6eaf1 !important;
+    background-color: var(--secondary-background-color) !important;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+div[data-testid="stTextInput"] input:focus,
+div[data-testid="stTextArea"] textarea:focus,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within {
+    border: 1px solid var(--primary-color) !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 90, 158, 0.25) !important;
+}
+div[data-testid="stTabs"] {
+    border-radius: var(--border-radius);
+    overflow: hidden; 
+    box-shadow: var(--box-shadow);
+}
+div[data-testid="stTabs"] button[role="tab"] {
+    border-radius: 0;
+    font-weight: 600;
+    color: var(--light-text-color);
+}
+div[data-testid="stTabs"] button[aria-selected="true"] {
+    background-color: var(--secondary-background-color);
+    color: var(--primary-color);
+    border-bottom: 3px solid var(--primary-color);
+}
+
+/* --- 4. Typografie --- */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--primary-color-dark);
+}
+
+/* Styling für st.info, st.warning, st.error */
+div[data-testid="stInfo"], 
+div[data-testid="stWarning"], 
+div[data-testid="stError"],
+div[data-testid="stSuccess"] {
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--box-shadow);
+    border-left-width: 6px;
+}
+
+/* --- 5. Responsives Design für Handys --- */
+@media (max-width: 768px) {
+    .main .block-container[data-testid="stVerticalBlock"] {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    div[data-testid="stButton"] > button {
+        width: 100%;
+    }
+
+/* VERSCHIEBT LOGO UND MENÜ GANZ NACH OBEN */
+section[data-testid="stSidebar"] > div:nth-child(1) {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+}

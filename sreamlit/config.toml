@@ -1,0 +1,9 @@
+[theme]
+# Primärfarben
+primaryColor = "#005a9e"  # Ein schönes kräftiges Blau (z.B. HM-Blau)
+backgroundColor = "#ffffff"  # Weißer Hintergrund
+secondaryBackgroundColor = "#f0f2f6"  # Ein sehr helles Grau für Hintergründe von Elementen
+textColor = "#31333F"  # Dunkler Text für guten Kontrast
+
+# Schriftart (Verwendet Systemschriften, stelle sicher, dass sie gängig sind)
+font = "sans serif" 
